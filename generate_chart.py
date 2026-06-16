@@ -22,10 +22,15 @@ def generate_nupl_chart():
     # Create figure and two subplots (Price on top, Ratio on bottom)
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
 
+    from matplotlib.ticker import ScalarFormatter
+
     # ------------------ TOP PLOT: Bitcoin Price ------------------
     ax1.set_title('Bitcoin Price & Unrealised Profit/Loss Ratio (NUPL)', fontsize=16, pad=15)
     ax1.set_ylabel('BTC Price (USD)', color='black', fontsize=12)
     ax1.set_yscale('log')
+    formatter = ScalarFormatter()
+    formatter.set_scientific(False)
+    ax1.yaxis.set_major_formatter(formatter)
     ax1.grid(True, which="both", ls="--", alpha=0.5)
 
     # Plot base price line
@@ -44,6 +49,7 @@ def generate_nupl_chart():
     ax2.set_xlabel('Date', fontsize=12)
     ax2.set_ylabel('NUPL Ratio', color='tab:blue', fontsize=12)
     ax2.set_yscale('log')
+    ax2.yaxis.set_major_formatter(formatter)
     # Set a reasonable Y-limit to prevent 2011 outliers (10^8) from squashing the chart
     ax2.set_ylim(0.1, 500)
     ax2.grid(True, which="both", ls="--", alpha=0.5)
