@@ -44,6 +44,8 @@ def generate_nupl_chart():
     ax2.set_xlabel('Date', fontsize=12)
     ax2.set_ylabel('NUPL Ratio', color='tab:blue', fontsize=12)
     ax2.set_yscale('log')
+    # Set a reasonable Y-limit to prevent 2011 outliers (10^8) from squashing the chart
+    ax2.set_ylim(0.1, 500)
     ax2.grid(True, which="both", ls="--", alpha=0.5)
 
     # Plot the Ratio
