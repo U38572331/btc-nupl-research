@@ -10,8 +10,6 @@ def generate_nupl_chart():
     df = df.dropna(subset=['Price']) # Remove rows where price is NaN
     
     # Calculate combined ratio
-    # When ratio is > 1 (+ve), the +ve column has the value and -ve is 1.0
-    # When ratio is < 1 (-ve), the -ve column has the value and +ve is 1.0
     df['Combined Ratio'] = np.where(
         df['Unrealised Profit/Loss Ratio (+ve)'] != 1.0, 
         df['Unrealised Profit/Loss Ratio (+ve)'], 
@@ -19,43 +17,48 @@ def generate_nupl_chart():
     )
 
     # Filter to view from 2011 onwards to avoid early noisy data
-    df = df[df['Date'].dt.year >= 2011]
+    df = df[df['Date'].dt.year >= 2011].copy()
 
-    # Create figure and axis objects with subplots
-    fig, ax1 = plt.subplots(figsize=(14, 8))
+    # Create figure and two subplots (Price on top, Ratio on bottom)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
 
-    # Plot Bitcoin Price on logarithmic scale (ax1)
-    color1 = 'tab:gray'
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('BTC Price (USD)', color=color1)
-    ax1.plot(df['Date'], df['Price'], color=color1, linewidth=1.5, label='BTC Price')
-    ax1.tick_params(axis='y', labelcolor=color1)
+    # ------------------ TOP PLOT: Bitcoin Price ------------------
+    ax1.set_title('Bitcoin Price & Unrealised Profit/Loss Ratio (NUPL)', fontsize=16, pad=15)
+    ax1.set_ylabel('BTC Price (USD)', color='black', fontsize=12)
     ax1.set_yscale('log')
+    ax1.grid(True, which="both", ls="--", alpha=0.5)
 
-    # Create a second y-axis for the Unrealised Profit/Loss Ratio
-    ax2 = ax1.twinx()  
-    color2 = 'tab:blue'
-    ax2.set_ylabel('Unrealised Profit/Loss Ratio', color=color2)
-    ax2.plot(df['Date'], df['Combined Ratio'], color=color2, linewidth=1.2, label='UP/UL Ratio')
-    ax2.tick_params(axis='y', labelcolor=color2)
+    # Plot base price line
+    ax1.plot(df['Date'], df['Price'], color='tab:gray', linewidth=1.5, label='BTC Price (Normal)')
+
+    # Highlight price when Ratio < 1.0
+    bottom_zones = df['Combined Ratio'] < 1.0
+    
+    # To color the line specifically in bottom zones, we overlay a scatter or masked plot
+    df_bottoms = df[bottom_zones]
+    ax1.scatter(df_bottoms['Date'], df_bottoms['Price'], color='red', s=10, label='Price in Capitulation (NUPL < 1)', zorder=5)
+
+    ax1.legend(loc='upper left')
+
+    # ------------------ BOTTOM PLOT: NUPL Ratio ------------------
+    ax2.set_xlabel('Date', fontsize=12)
+    ax2.set_ylabel('NUPL Ratio', color='tab:blue', fontsize=12)
     ax2.set_yscale('log')
+    ax2.grid(True, which="both", ls="--", alpha=0.5)
+
+    # Plot the Ratio
+    ax2.plot(df['Date'], df['Combined Ratio'], color='tab:blue', linewidth=1.2, label='NUPL Ratio')
     
     # Add a horizontal line at Ratio = 1.0
     ax2.axhline(y=1.0, color='red', linestyle='--', linewidth=2, label='Capitulation Threshold (<1.0)')
 
-    # Fill areas where Ratio < 1.0 (Predictable Market Bottoms)
-    bottom_zones = df['Combined Ratio'] < 1.0
+    # Fill areas where Ratio < 1.0
     ax2.fill_between(df['Date'], df['Combined Ratio'], 1.0, where=bottom_zones, color='red', alpha=0.3, label='Market Bottom Zone')
 
-    # Title and grid
-    plt.title('Bitcoin: Unrealised Profit/Loss Ratio vs Price (Real On-Chain Data)', fontsize=16, pad=20)
-    fig.tight_layout()
-    ax1.grid(True, which="both", ls="--", alpha=0.5)
+    ax2.legend(loc='upper left')
 
-    # Combine legends
-    lines_1, labels_1 = ax1.get_legend_handles_labels()
-    lines_2, labels_2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left')
+    # Tweak layout
+    fig.tight_layout()
 
     # Save the chart
     plt.savefig('nupl_chart.png', dpi=300, bbox_inches='tight')
