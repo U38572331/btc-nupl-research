@@ -22,14 +22,13 @@ def generate_nupl_chart():
     # Create figure and two subplots (Price on top, Ratio on bottom)
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
 
-    from matplotlib.ticker import ScalarFormatter
+    from matplotlib.ticker import FuncFormatter
+    formatter = FuncFormatter(lambda y, _: '{:g}'.format(y))
 
     # ------------------ TOP PLOT: Bitcoin Price ------------------
     ax1.set_title('Bitcoin Price & Unrealised Profit/Loss Ratio (NUPL)', fontsize=16, pad=15)
     ax1.set_ylabel('BTC Price (USD)', color='black', fontsize=12)
     ax1.set_yscale('log')
-    formatter = ScalarFormatter()
-    formatter.set_scientific(False)
     ax1.yaxis.set_major_formatter(formatter)
     ax1.grid(True, which="both", ls="--", alpha=0.5)
 
